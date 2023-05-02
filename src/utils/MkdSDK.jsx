@@ -14,8 +14,42 @@ export default function MkdSDK() {
   };
   
   this.login = async function (email, password, role) {
-    //TODO
-  };
+    try {
+      const response = await fetch('https://reacttask.mkdlabs.com/v2/api/lambda/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-project': 'cmVhY3R0YXNrOmQ5aGVkeWN5djZwN3p3OHhpMzR0OWJtdHNqc2lneTV0Nw=='
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          role: role
+        })
+      });
+  
+      const responseData = await response.json();
+  
+      if (responseData.error) {
+        // Handle error case
+        console.error(responseData.message);
+        return null;
+      } else {
+        // Login successful, return user data
+        return {
+          role: responseData.role,
+          token: responseData.token,
+          expireAt: responseData.expire_at,
+          userId: responseData.user_id
+        };
+      }
+    } catch (error) {
+      // Handle error case
+      console.error(error);
+      return null;
+    }
+  }
+  
 
   this.getHeader = function () {
     return {
@@ -87,8 +121,37 @@ export default function MkdSDK() {
   };  
 
   this.check = async function (role) {
-    //TODO
-  };
+    try {
+      const response = await fetch('https://reacttask.mkdlabs.com/v2/api/lambda/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-project': 'cmVhY3R0YXNrOmQ5aGVkeWN5djZwN3p3OHhpMzR0OWJtdHNqc2lneTV0Nw==',
+          'Authorization': `Bearer ${this.session.token}`
+        },
+        body: JSON.stringify({
+          role: role
+        })
+      });
+  
+      if (response.status === 200) {
+        const data = await response.json();
+        return data.authorized;
+      } else if (response.status === 401) {
+        // Token expired or invalid
+        console.error('Token expired or invalid');
+        this.session.token = null;
+        return false;
+      } else {
+        console.error(`Server responded with status ${response.status}`);
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+  
 
   return this;
 }

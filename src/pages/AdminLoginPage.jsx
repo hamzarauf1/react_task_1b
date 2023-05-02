@@ -28,6 +28,19 @@ const AdminLoginPage = () => {
   const onSubmit = async (data) => {
     let sdk = new MkdSDK();
     //TODO
+    try {
+      const response = await sdk.login(data.email, data.password, "admin");
+      if (!response.error) {
+        dispatch({ type: "LOGIN_SUCCESS", payload: response.token });
+        navigate("/admin/dashboard");
+        
+      } else {
+        setError("email", { type: "manual", message: "Invalid credentials" });
+      }
+    } catch (error) {
+      console.error(error);
+      setError("email", { type: "manual", message: "An error occurred" });
+    }
   };
 
   return (
